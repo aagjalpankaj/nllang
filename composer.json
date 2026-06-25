@@ -1,0 +1,13 @@
+{
+    "name": "aagjalpankaj/nllang",
+    "description": "NLLang — een speelse programmeertaal met Nederlandse sleutelwoorden, geschreven in PHP.",
+    "keywords": ["language", "interpreter", "dutch", "toy-language", "programming-language", "nl"],
+    "license": "MIT",
+    "require": {
+        "php": ">=8.0"
+    },
+    "autoload": {
+        "classmap": ["src/"]
+    },
+    "bin": ["bin/nllang"]
+}

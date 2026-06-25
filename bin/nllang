@@ -1,0 +1,47 @@
+#!/usr/bin/env php
+<?php
+
+// Global install:  ~/.config/composer/vendor/nllang/nllang/bin/ → ../../../autoload.php
+// Local dev:       vendor/autoload.php  (after composer install)
+// No composer:     require source files directly
+if (file_exists(__DIR__ . '/../../../autoload.php')) {
+    require __DIR__ . '/../../../autoload.php';
+} elseif (file_exists(__DIR__ . '/../vendor/autoload.php')) {
+    require __DIR__ . '/../vendor/autoload.php';
+} else {
+    $srcDir = __DIR__ . '/../src';
+    require $srcDir . '/TokenType.php';
+    require $srcDir . '/Token.php';
+    require $srcDir . '/Lexer.php';
+    require $srcDir . '/Node.php';
+    require $srcDir . '/Parser.php';
+    require $srcDir . '/Scope.php';
+    require $srcDir . '/Interpreter.php';
+}
+
+if ($argc < 2) {
+    fwrite(STDERR, "Gebruik: nllang <bestand.nl>\n");
+    exit(1);
+}
+
+$file = $argv[1];
+
+if (!file_exists($file)) {
+    fwrite(STDERR, "Fout: bestand niet gevonden: {$file}\n");
+    exit(1);
+}
+
+if (pathinfo($file, PATHINFO_EXTENSION) !== 'nl') {
+    fwrite(STDERR, "Waarschuwing: bestand heeft geen .nl extensie\n");
+}
+
+$source = file_get_contents($file);
+
+try {
+    $tokens      = (new Lexer($source))->tokenize();
+    $program     = (new Parser($tokens))->parse();
+    (new Interpreter())->run($program);
+} catch (RuntimeException $e) {
+    fwrite(STDERR, $e->getMessage() . "\n");
+    exit(1);
+}
