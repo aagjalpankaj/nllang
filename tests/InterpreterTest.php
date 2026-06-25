@@ -124,4 +124,168 @@ class InterpreterTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->interpret('hoi zeg onbekend; doei');
     }
+
+    // -------------------------------------------------------------------------
+    // Functions
+    // -------------------------------------------------------------------------
+
+    public function testFunctionNoReturn(): void
+    {
+        $out = $this->interpret('hoi taak zeg_hoi() { zeg "hoi"; } zeg_hoi(); doei');
+        $this->assertSame('hoi', $out);
+    }
+
+    public function testFunctionWithReturn(): void
+    {
+        $out = $this->interpret('hoi taak kwadraat(n) { geef n * n; } zeg kwadraat(7); doei');
+        $this->assertSame('49', $out);
+    }
+
+    public function testFunctionWithMultipleParams(): void
+    {
+        $out = $this->interpret('hoi taak tel_op(a, b) { geef a + b; } zeg tel_op(3, 4); doei');
+        $this->assertSame('7', $out);
+    }
+
+    public function testRecursiveFunction(): void
+    {
+        $out = $this->interpret('hoi taak fac(n) { als (n <= 1) { geef 1; } geef n * fac(n - 1); } zeg fac(5); doei');
+        $this->assertSame('120', $out);
+    }
+
+    public function testFunctionReturnsNullByDefault(): void
+    {
+        $out = $this->interpret('hoi taak leeg() { stel a = 1; } zeg leeg(); doei');
+        $this->assertSame('niets', $out);
+    }
+
+    public function testReturnOutsideFunctionThrows(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->interpret('hoi geef 1; doei');
+    }
+
+    // -------------------------------------------------------------------------
+    // Arrays
+    // -------------------------------------------------------------------------
+
+    public function testArrayLiteral(): void
+    {
+        $out = $this->interpret('hoi stel arr = [1, 2, 3]; zeg arr; doei');
+        $this->assertSame('[1, 2, 3]', $out);
+    }
+
+    public function testArrayIndex(): void
+    {
+        $out = $this->interpret('hoi stel arr = [10, 20, 30]; zeg arr[0]; zeg arr[2]; doei');
+        $this->assertSame("10\n30", $out);
+    }
+
+    public function testArrayIndexAssign(): void
+    {
+        $out = $this->interpret('hoi stel arr = [1, 2, 3]; arr[1] = 99; zeg arr; doei');
+        $this->assertSame('[1, 99, 3]', $out);
+    }
+
+    public function testArrayBuiltinLengte(): void
+    {
+        $out = $this->interpret('hoi stel arr = [1, 2, 3, 4]; zeg lengte(arr); doei');
+        $this->assertSame('4', $out);
+    }
+
+    public function testArrayBuiltinDuw(): void
+    {
+        $out = $this->interpret('hoi stel arr = [1, 2]; arr = duw(arr, 3); zeg arr; doei');
+        $this->assertSame('[1, 2, 3]', $out);
+    }
+
+    public function testArrayBuiltinPop(): void
+    {
+        $out = $this->interpret('hoi stel arr = [1, 2, 3]; arr = pop(arr); zeg arr; doei');
+        $this->assertSame('[1, 2]', $out);
+    }
+
+    public function testEmptyArray(): void
+    {
+        $out = $this->interpret('hoi stel arr = []; zeg lengte(arr); doei');
+        $this->assertSame('0', $out);
+    }
+
+    // -------------------------------------------------------------------------
+    // Logical NOT
+    // -------------------------------------------------------------------------
+
+    public function testNietKeyword(): void
+    {
+        $out = $this->interpret('hoi zeg niet waar; zeg niet onwaar; doei');
+        $this->assertSame("onwaar\nwaar", $out);
+    }
+
+    public function testBangOperator(): void
+    {
+        $out = $this->interpret('hoi zeg !waar; zeg !onwaar; doei');
+        $this->assertSame("onwaar\nwaar", $out);
+    }
+
+    public function testNietInCondition(): void
+    {
+        $out = $this->interpret('hoi stel x = onwaar; als (niet x) { zeg "ja"; } doei');
+        $this->assertSame('ja', $out);
+    }
+
+    // -------------------------------------------------------------------------
+    // Voor elk (foreach)
+    // -------------------------------------------------------------------------
+
+    public function testForEachBasic(): void
+    {
+        $out = $this->interpret('hoi stel arr = [1, 2, 3]; voor elk x in arr { zeg x; } doei');
+        $this->assertSame("1\n2\n3", $out);
+    }
+
+    public function testForEachStrings(): void
+    {
+        $out = $this->interpret('hoi stel arr = ["a", "b", "c"]; voor elk s in arr { zeg s; } doei');
+        $this->assertSame("a\nb\nc", $out);
+    }
+
+    public function testForEachWithContinue(): void
+    {
+        $out = $this->interpret('hoi stel arr = [1, 2, 3, 4]; voor elk x in arr { als (x == 2) { verder; } zeg x; } doei');
+        $this->assertSame("1\n3\n4", $out);
+    }
+
+    public function testForEachWithBreak(): void
+    {
+        $out = $this->interpret('hoi stel arr = [1, 2, 3, 4]; voor elk x in arr { als (x == 3) { stop; } zeg x; } doei');
+        $this->assertSame("1\n2", $out);
+    }
+
+    public function testForEachEmptyList(): void
+    {
+        $out = $this->interpret('hoi voor elk x in [] { zeg x; } zeg "klaar"; doei');
+        $this->assertSame('klaar', $out);
+    }
+
+    public function testForEachVariableIsScoped(): void
+    {
+        $out = $this->interpret('hoi stel arr = [1, 2]; voor elk x in arr { zeg x; } doei');
+        $this->assertSame("1\n2", $out);
+    }
+
+    // -------------------------------------------------------------------------
+    // Built-in type conversions
+    // -------------------------------------------------------------------------
+
+    public function testTekst(): void
+    {
+        $out = $this->interpret('hoi zeg tekst(42); doei');
+        $this->assertSame('42', $out);
+    }
+
+    public function testGetal(): void
+    {
+        $out = $this->interpret('hoi zeg getal("42") + 1; doei');
+        $this->assertSame('43', $out);
+    }
 }

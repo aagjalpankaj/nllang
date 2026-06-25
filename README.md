@@ -1,10 +1,7 @@
 <h1 align="center">NLLang</h1>
 
 <p align="center">
-  <img alt="PHP" src="https://img.shields.io/badge/php-%3E%3D8.0-8892BF?logo=php&logoColor=white"/>
-  <img alt="License" src="https://img.shields.io/badge/license-MIT-green"/>
-  <img alt="Downloads" src="https://img.shields.io/packagist/dt/aagjalpankaj/nllang"/>
-  <img alt="Extension" src="https://img.shields.io/badge/extensie-.nl-orange"/>
+  <img alt="CI" src="https://github.com/aagjalpankaj/nllang/actions/workflows/ci.yml/badge.svg"/>
 </p>
 
 <p align="center">
@@ -15,13 +12,26 @@
 
 <blockquote>
 <p align="center">
-  ⚠️ <b>Waarschuwing:</b> NLLang is gebouwd voor kinderen, nieuwsgierige geesten en mensen die te veel Nederlandse koffie hebben gedronken. Gebruik het <i>niet</i> in productie — tenzij je baas ook Nederlands spreekt en geen idee heeft wat hij doet.
+  ⚠️ <b>Waarschuwing:</b> NLLang is gebouwd voor kinderen, nieuwsgierige geesten en mensen die te veel Nederlandse koffie hebben gedronken. Gebruik het <i>niet</i> in productie.
 </p>
 </blockquote>
 
+<p align="center">
+  <img src="assets/demo.gif" alt="NLLang demo" width="700"/>
+</p>
+
 <h2 align="center">Installatie</h2>
 
-<h4 align="left">Vereisten: PHP 8.0 of hoger en <a href="https://getcomposer.org">Composer</a>.</h4>
+<h3 align="left">Homebrew <em>(aanbevolen)</em></h3>
+
+```bash
+brew tap aagjalpankaj/nllang
+brew install nllang
+```
+
+<h3 align="left">Composer</h3>
+
+<p align="left">Vereisten: PHP 8.1 of hoger en <a href="https://getcomposer.org">Composer</a>.</p>
 
 ```bash
 composer global require aagjalpankaj/nllang
@@ -154,6 +164,10 @@ hoi
   a += 5;
   b *= 2;
   zeg a, b;
+
+  // Logische ontkenning
+  zeg niet waar;  // onwaar
+  zeg !onwaar;    // waar
 doei
 ```
 
@@ -216,6 +230,102 @@ Stop bij acht.
 Klaar!
 ```
 
+<h3 align="center">Functies</h3>
+
+<p align="center">Definieer functies met <code>taak</code> en geef een waarde terug met <code>geef</code>. Functies zijn recursief aanroepbaar.</p>
+
+```
+hoi
+  taak begroet(naam) {
+    zeg "Hoi, " + naam + "!";
+  }
+
+  taak faculteit(n) {
+    als (n <= 1) {
+      geef 1;
+    }
+    geef n * faculteit(n - 1);
+  }
+
+  begroet("wereld");
+  zeg faculteit(6);
+doei
+```
+
+```
+Hoi, wereld!
+720
+```
+
+<h3 align="center">Lijsten</h3>
+
+<p align="center">Maak lijsten aan met <code>[...]</code>. Gebruik de ingebouwde functies <code>lengte</code>, <code>duw</code> en <code>pop</code> om lijsten te bewerken.</p>
+
+```
+hoi
+  stel getallen = [1, 2, 3];
+  zeg lengte(getallen);    // 3
+  zeg getallen[0];         // 1
+
+  getallen[1] = 99;
+  getallen = duw(getallen, 4);
+  zeg getallen;            // [1, 99, 3, 4]
+
+  getallen = pop(getallen);
+  zeg getallen;            // [1, 99, 3]
+doei
+```
+
+<h3 align="center">Voor-elk lus</h3>
+
+<p align="center">Gebruik <code>voor elk</code> om over een lijst te itereren. <code>stop</code> en <code>verder</code> werken ook hier.</p>
+
+```
+hoi
+  stel namen = ["Alice", "Bob", "Charlie"];
+
+  voor elk naam in namen {
+    zeg "Hoi, " + naam + "!";
+  }
+
+  // Sla even getallen over
+  stel cijfers = [1, 2, 3, 4, 5];
+  voor elk n in cijfers {
+    als (n % 2 == 0) {
+      verder;
+    }
+    zeg n;
+  }
+doei
+```
+
+```
+Hoi, Alice!
+Hoi, Bob!
+Hoi, Charlie!
+1
+3
+5
+```
+
+<h3 align="center">Gebruikersinvoer</h3>
+
+<p align="center">Lees invoer van de gebruiker met <code>vraag()</code>. Gebruik <code>getal()</code> en <code>tekst()</code> om typen om te zetten.</p>
+
+```
+hoi
+  stel naam = vraag("Wat is je naam? ");
+  zeg "Hoi, " + naam + "!";
+
+  stel leeftijd = getal(vraag("Hoe oud ben je? "));
+  als (leeftijd >= 18) {
+    zeg "Je bent volwassen.";
+  } anders {
+    zeg "Je bent " + tekst(18 - leeftijd) + " jaar van volwassen.";
+  }
+doei
+```
+
 <h3 align="center">Scoping</h3>
 
 <p align="center">Variabelen leven in het blok waarin ze zijn gedeclareerd. Een binnenste blok kan variabelen van buiten lezen, maar kan ze ook overschaduwen met een nieuwe declaratie.</p>
@@ -264,9 +374,29 @@ doei
 | `zolang` | zolang-lus |
 | `stop` | verlaat de lus |
 | `verder` | volgende iteratie |
+| `voor elk ... in` | itereer over een lijst |
+| `taak` | functie definiëren |
+| `geef` | waarde teruggeven uit functie |
+| `niet` / `!` | logische ontkenning |
 | `waar` | booleaanse waarde waar (true) |
 | `onwaar` | booleaanse waarde onwaar (false) |
 | `niets` | lege waarde (null) |
+
+</p>
+
+<h2 align="center">Ingebouwde functies</h2>
+
+<p align="center">
+
+| Functie | Beschrijving |
+|---------|-------------|
+| `zeg(...)` | Afdrukken naar de console |
+| `vraag(prompt)` | Lees een regel invoer van de gebruiker |
+| `lengte(lijst)` | Geef de lengte van een lijst |
+| `duw(lijst, waarde)` | Voeg een waarde toe aan het einde van een lijst |
+| `pop(lijst)` | Verwijder het laatste element van een lijst |
+| `tekst(waarde)` | Zet een waarde om naar tekst |
+| `getal(waarde)` | Zet een waarde om naar een getal |
 
 </p>
 
@@ -278,3 +408,7 @@ Bekijk de map [`examples/`](examples/) voor kant-en-klare voorbeeldprogramma's:
 - [`rekenen.nl`](examples/rekenen.nl) — Rekenkundige bewerkingen
 - [`keuze.nl`](examples/keuze.nl) — Voorwaarden en scoping
 - [`teller.nl`](examples/teller.nl) — Lussen en Fibonacci
+- [`voor_elk.nl`](examples/voor_elk.nl) — Voor-elk lus
+- [`functies.nl`](examples/functies.nl) — Functies en recursie
+- [`lijsten.nl`](examples/lijsten.nl) — Lijsten en ingebouwde functies
+- [`niet.nl`](examples/niet.nl) — Logische ontkenning

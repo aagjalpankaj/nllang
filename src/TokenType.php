@@ -7,14 +7,18 @@ class TokenType
     const PROGRAM_END   = 'PROGRAM_END';   // doei
 
     // Statement keywords
-    const VAR_DECL = 'VAR_DECL'; // stel
-    const PRINT    = 'PRINT';    // zeg
-    const IF       = 'IF';       // als
-    const ELSE_IF  = 'ELSE_IF';  // anders als
-    const ELSE     = 'ELSE';     // anders
-    const WHILE    = 'WHILE';    // zolang
-    const BREAK    = 'BREAK';    // stop
-    const CONTINUE = 'CONTINUE'; // verder
+    const VAR_DECL  = 'VAR_DECL';  // stel
+    const PRINT     = 'PRINT';     // zeg
+    const IF        = 'IF';        // als
+    const ELSE_IF   = 'ELSE_IF';   // anders als
+    const ELSE      = 'ELSE';      // anders
+    const WHILE     = 'WHILE';     // zolang
+    const BREAK     = 'BREAK';     // stop
+    const CONTINUE  = 'CONTINUE';  // verder
+    const FUNC_DECL = 'FUNC_DECL'; // taak
+    const RETURN    = 'RETURN';    // geef
+    const FOR_EACH  = 'FOR_EACH'; // voor elk
+    const IN        = 'IN';       // in
 
     // Literal types
     const NUMBER    = 'NUMBER';
@@ -50,14 +54,17 @@ class TokenType
     const GTE = 'GTE';
 
     // Logical operators
-    const AND = 'AND';
-    const OR  = 'OR';
+    const AND = 'AND'; // &&
+    const OR  = 'OR';  // ||
+    const NOT = 'NOT'; // niet / !
 
     // Delimiters
     const LPAREN    = 'LPAREN';
     const RPAREN    = 'RPAREN';
     const LBRACE    = 'LBRACE';
     const RBRACE    = 'RBRACE';
+    const LBRACKET  = 'LBRACKET';  // [
+    const RBRACKET  = 'RBRACKET';  // ]
     const SEMICOLON = 'SEMICOLON';
     const COMMA     = 'COMMA';
 
