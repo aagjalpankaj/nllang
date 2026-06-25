@@ -27,14 +27,17 @@ class Parser
     private function parseStatement(): Node
     {
         return match ($this->current()->type) {
-            TokenType::VAR_DECL => $this->parseVarDecl(),
-            TokenType::PRINT    => $this->parsePrint(),
-            TokenType::IF       => $this->parseIf(),
-            TokenType::WHILE    => $this->parseWhile(),
-            TokenType::BREAK    => $this->parseBreak(),
-            TokenType::CONTINUE => $this->parseContinue(),
-            TokenType::LBRACE   => $this->parseBlock(),
-            default             => $this->parseExprStmt(),
+            TokenType::VAR_DECL  => $this->parseVarDecl(),
+            TokenType::PRINT     => $this->parsePrint(),
+            TokenType::IF        => $this->parseIf(),
+            TokenType::WHILE     => $this->parseWhile(),
+            TokenType::BREAK     => $this->parseBreak(),
+            TokenType::CONTINUE  => $this->parseContinue(),
+            TokenType::FUNC_DECL => $this->parseFuncDecl(),
+            TokenType::RETURN    => $this->parseReturn(),
+            TokenType::FOR_EACH  => $this->parseForEach(),
+            TokenType::LBRACE    => $this->parseBlock(),
+            default              => $this->parseExprStmt(),
         };
     }
 
@@ -120,6 +123,44 @@ class Parser
         return new ContinueNode();
     }
 
+    private function parseForEach(): ForEachNode
+    {
+        $this->advance(); // voor elk
+        $variable = $this->expect(TokenType::IDENTIFIER, 'variabelenaam')->value;
+        $this->expect(TokenType::IN, "'in'");
+        $iterable = $this->parseExpression();
+        $body     = $this->parseBlock();
+        return new ForEachNode($variable, $iterable, $body);
+    }
+
+    private function parseFuncDecl(): FuncDeclNode
+    {
+        $this->advance(); // taak
+        $name = $this->expect(TokenType::IDENTIFIER, 'functienaam')->value;
+        $this->expect(TokenType::LPAREN, "'('");
+        $params = [];
+        if (!$this->check(TokenType::RPAREN)) {
+            $params[] = $this->expect(TokenType::IDENTIFIER, 'parameternaam')->value;
+            while ($this->match(TokenType::COMMA)) {
+                $params[] = $this->expect(TokenType::IDENTIFIER, 'parameternaam')->value;
+            }
+        }
+        $this->expect(TokenType::RPAREN, "')'");
+        $body = $this->parseBlock();
+        return new FuncDeclNode($name, $params, $body);
+    }
+
+    private function parseReturn(): ReturnNode
+    {
+        $this->advance(); // geef
+        $value = null;
+        if (!$this->check(TokenType::SEMICOLON)) {
+            $value = $this->parseExpression();
+        }
+        $this->expect(TokenType::SEMICOLON, "';'");
+        return new ReturnNode($value);
+    }
+
     private function parseBlock(): BlockNode
     {
         $this->expect(TokenType::LBRACE, "'{'");
@@ -158,7 +199,25 @@ class Parser
             TokenType::PERCENT_ASSIGN,
         ];
 
-        // Lookahead: IDENTIFIER followed by an assignment operator?
+        // Index assignment: name[expr] op= value — try, backtrack if not an assignment.
+        if ($this->check(TokenType::IDENTIFIER)
+            && isset($this->tokens[$this->pos + 1])
+            && $this->tokens[$this->pos + 1]->type === TokenType::LBRACKET
+        ) {
+            $savedPos = $this->pos;
+            $name     = $this->advance()->value;
+            $this->advance(); // [
+            $index    = $this->parseExpression();
+            $this->expect(TokenType::RBRACKET, "']'");
+            if (in_array($this->current()->type, $assignOps, true)) {
+                $op    = $this->advance()->value;
+                $value = $this->parseAssignment();
+                return new IndexAssignNode($name, $index, $op, $value);
+            }
+            $this->pos = $savedPos; // not an assignment — backtrack and fall through
+        }
+
+        // Scalar assignment: IDENTIFIER op= value
         if ($this->check(TokenType::IDENTIFIER)
             && isset($this->tokens[$this->pos + 1])
             && in_array($this->tokens[$this->pos + 1]->type, $assignOps, true)
@@ -242,7 +301,7 @@ class Parser
 
     private function parseUnary(): Node
     {
-        if ($this->check(TokenType::MINUS)) {
+        if ($this->check(TokenType::MINUS) || $this->check(TokenType::NOT)) {
             $op      = $this->advance()->value;
             $operand = $this->parseUnary();
             return new UnaryNode($op, $operand);
@@ -277,7 +336,28 @@ class Parser
 
             case TokenType::IDENTIFIER:
                 $this->advance();
+                if ($this->check(TokenType::LPAREN)) {
+                    return $this->parseCallArgs($tok->value);
+                }
+                if ($this->check(TokenType::LBRACKET)) {
+                    $this->advance(); // [
+                    $idx = $this->parseExpression();
+                    $this->expect(TokenType::RBRACKET, "']'");
+                    return new IndexNode(new IdentifierNode($tok->value), $idx);
+                }
                 return new IdentifierNode($tok->value);
+
+            case TokenType::LBRACKET:
+                $this->advance(); // [
+                $elements = [];
+                if (!$this->check(TokenType::RBRACKET)) {
+                    $elements[] = $this->parseExpression();
+                    while ($this->match(TokenType::COMMA)) {
+                        $elements[] = $this->parseExpression();
+                    }
+                }
+                $this->expect(TokenType::RBRACKET, "']'");
+                return new ArrayLiteralNode($elements);
 
             case TokenType::LPAREN:
                 $this->advance();
@@ -290,6 +370,20 @@ class Parser
                     "Onverwacht token '{$tok->value}' op regel {$tok->line}"
                 );
         }
+    }
+
+    private function parseCallArgs(string $name): CallNode
+    {
+        $this->advance(); // (
+        $args = [];
+        if (!$this->check(TokenType::RPAREN)) {
+            $args[] = $this->parseExpression();
+            while ($this->match(TokenType::COMMA)) {
+                $args[] = $this->parseExpression();
+            }
+        }
+        $this->expect(TokenType::RPAREN, "')'");
+        return new CallNode($name, $args);
     }
 
     // -------------------------------------------------------------------------

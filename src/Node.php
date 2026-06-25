@@ -107,3 +107,60 @@ class IdentifierNode extends Node
 {
     public function __construct(public readonly string $name) {}
 }
+
+class ForEachNode extends Node
+{
+    public function __construct(
+        public readonly string    $variable,
+        public readonly Node      $iterable,
+        public readonly BlockNode $body
+    ) {}
+}
+
+class FuncDeclNode extends Node
+{
+    /** @param string[] $params */
+    public function __construct(
+        public readonly string    $name,
+        public readonly array     $params,
+        public readonly BlockNode $body
+    ) {}
+}
+
+class ReturnNode extends Node
+{
+    public function __construct(public readonly ?Node $value) {}
+}
+
+class CallNode extends Node
+{
+    /** @param Node[] $args */
+    public function __construct(
+        public readonly string $name,
+        public readonly array  $args
+    ) {}
+}
+
+class ArrayLiteralNode extends Node
+{
+    /** @param Node[] $elements */
+    public function __construct(public readonly array $elements) {}
+}
+
+class IndexNode extends Node
+{
+    public function __construct(
+        public readonly Node $array,
+        public readonly Node $index
+    ) {}
+}
+
+class IndexAssignNode extends Node
+{
+    public function __construct(
+        public readonly string $name,
+        public readonly Node   $index,
+        public readonly string $op,
+        public readonly Node   $value
+    ) {}
+}

@@ -169,8 +169,31 @@ class Lexer
             'waar'   => new Token(TokenType::TRUE, true, $line),
             'onwaar' => new Token(TokenType::FALSE, false, $line),
             'niets'  => new Token(TokenType::NULL_TYPE, null, $line),
+            'taak'   => new Token(TokenType::FUNC_DECL, $word, $line),
+            'geef'   => new Token(TokenType::RETURN, $word, $line),
+            'niet'   => new Token(TokenType::NOT, $word, $line),
+            'voor'   => $this->scanVoor($line),
+            'in'     => new Token(TokenType::IN, $word, $line),
             default  => new Token(TokenType::IDENTIFIER, $word, $line),
         };
+    }
+
+    // 'voor' was just consumed; peek ahead for 'elk' to emit FOR_EACH vs plain identifier.
+    private function scanVoor(int $line): Token
+    {
+        $tmp = $this->pos;
+        while ($tmp < $this->len && ($this->src[$tmp] === ' ' || $this->src[$tmp] === "\t")) {
+            $tmp++;
+        }
+        if ($tmp + 3 <= $this->len && substr($this->src, $tmp, 3) === 'elk') {
+            $after = $tmp + 3;
+            $atEnd = $after >= $this->len;
+            if ($atEnd || (!ctype_alnum($this->src[$after]) && $this->src[$after] !== '_')) {
+                $this->pos = $after;
+                return new Token(TokenType::FOR_EACH, 'voor elk', $line);
+            }
+        }
+        return new Token(TokenType::IDENTIFIER, 'voor', $line);
     }
 
     // 'anders' was just consumed; peek ahead for 'als' to emit ELSE_IF vs ELSE.
@@ -234,6 +257,9 @@ class Lexer
             ')'  => new Token(TokenType::RPAREN, $ch, $line),
             '{'  => new Token(TokenType::LBRACE, $ch, $line),
             '}'  => new Token(TokenType::RBRACE, $ch, $line),
+            '['  => new Token(TokenType::LBRACKET, $ch, $line),
+            ']'  => new Token(TokenType::RBRACKET, $ch, $line),
+            '!'  => new Token(TokenType::NOT, $ch, $line),
             ';'  => new Token(TokenType::SEMICOLON, $ch, $line),
             ','  => new Token(TokenType::COMMA, $ch, $line),
             default => $this->error("Onbekend teken '{$ch}' op regel {$line}"),

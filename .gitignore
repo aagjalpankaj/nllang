@@ -3,3 +3,4 @@ composer.lock
 *.nl.cache
 .idea
 .phpunit.result.cache
+builds/
